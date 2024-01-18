@@ -1,0 +1,22 @@
+function doGet() {
+  // Get the HTML content from the specified sheet and cell
+  var sheetName = "HTML";
+  var cellAddress = "A1";
+  var htmlContent = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName).getRange(cellAddress).getValue();
+
+  // Return HTML content as a web page
+  return HtmlService.createHtmlOutput(htmlContent);
+}
+
+function onOpen() {
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('AweSheets')
+    .addItem('Update HTML', 'runDoGet')
+    .addItem('Save As HTML', 'saveAsHTML')
+    .addToUi();
+}
+
+function runDoGet() {
+  var htmlContent = doGet();
+  Logger.log(htmlContent);
+}
