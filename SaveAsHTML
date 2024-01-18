@@ -1,0 +1,73 @@
+function saveAsHTML() {
+  // Get the active spreadsheet
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+
+  // Get the specific sheet by name (change 'HTML' to your actual sheet name)
+  var sheet = spreadsheet.getSheetByName('HTML');
+
+  if (!sheet) {
+    Logger.log('Sheet not found.');
+    return;
+  }
+
+  // Get the cell value from HTML sheet, cell A1
+  var cellValue = sheet.getRange('A1').getValue();
+
+  // Minify the HTML content using Google Apps Script's built-in utility
+  var minifiedHtmlContent = minifyHtml(cellValue);
+
+  // Get the title from the "Details" sheet, cell B3
+  var titleSheet = spreadsheet.getSheetByName('Details');
+  if (!titleSheet) {
+    Logger.log('Details sheet not found.');
+    return;
+  }
+
+  var docTitle = titleSheet.getRange('B3').getValue();
+  if (!docTitle) {
+    Logger.log('Document title not found in "Details" sheet, cell B3.');
+    return;
+  }
+
+  // Create a new HTML file with the specified title and .html extension
+  docTitle = docTitle.replace(/\s+/g, '_'); // Replace spaces with underscores
+  var folderName = 'SavedHTML';
+  var folder = getOrCreateFolder(spreadsheet, folderName);
+  var file = folder.createFile(docTitle + '.html', minifiedHtmlContent, MimeType.HTML);
+
+  // Get the URL of the created file
+  var fileUrl = file.getUrl();
+
+  // Print the file URL in "Details" sheet, cell B22
+  titleSheet.getRange('B22').setValue(fileUrl);
+
+  // Log the file URL
+  Logger.log('Minified HTML content saved as file: ' + fileUrl);
+}
+
+// Helper function to get or create a folder by name
+function getOrCreateFolder(spreadsheet, folderName) {
+  var folders = DriveApp.getFoldersByName(folderName);
+  var folder;
+
+  if (folders.hasNext()) {
+    folder = folders.next();
+  } else {
+    folder = DriveApp.createFolder(folderName);
+    spreadsheet.toast('Created folder: ' + folderName, 'Folder Created');
+  }
+
+  return folder;
+}
+
+// Helper function to minify HTML using Google Apps Script's Utilities service
+function minifyHtml(htmlContent) {
+  try {
+    // Minify the HTML content using Google Apps Script's Utilities service
+    var minifiedHtml = Utilities.formatString('<!DOCTYPE html>%s', htmlContent);
+    return minifiedHtml;
+  } catch (error) {
+    Logger.log('Error while minifying HTML: ' + error.message);
+    return htmlContent; // Return the original HTML on error
+  }
+}
